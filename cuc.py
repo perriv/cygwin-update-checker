@@ -59,6 +59,10 @@ def main():
   parser.add_argument('--mirror', metavar='HOST', default='last mirror', help='cygwin mirror')
   parser.add_argument('--cache-dir', metavar='DIR', default='/var/cache/setup', help='directory to store cached files')
   parser.add_argument('--setup-dir', metavar='DIR', default='/etc/setup', help='directory in which setup stores its files')
+  parser.add_argument('--force-download', action='store_true', help='do not use cache')
+  group = parser.add_mutually_exclusive_group()
+  group.add_argument('--include', metavar='PKGS', help='comma-separated list of packages to only consider')
+  group.add_argument('--exclude', metavar='PKGS', help='comma-separated list of packages to not consider')
   args = parser.parse_args()
 
   # Logging configuration.
@@ -71,8 +75,8 @@ def main():
   logging.basicConfig(format='%(levelname)s: %(filename)s:%(lineno)d %(message)s', level=min_severity)
 
   # Create the cache if it doesn't exist.
-  use_cache = True
-  if not os.path.isdir(args.cache_dir):
+  use_cache = not args.force_download
+  if use_cache and not os.path.isdir(args.cache_dir):
     logging.info('Creating cache directory %s', args.cache_dir)
     try:
       os.makedirs(args.cache_dir)
@@ -125,22 +129,32 @@ def main():
       logging.warning('Could not verify downloaded setup.ini')
   current = parse_current_packages(ini)
 
-  # Print out updates
+  # Collect and filter out packages that have updates available.
   updates = []
   for pkg in installed.keys():
     installed_vers = installed[pkg]
     current_vers = current[pkg]
     if installed_vers != current_vers:
       updates.append((pkg, installed_vers, current_vers))
-  if len(updates) > 0:
-    print '%d update%s available%s' % (len(updates), '' if len(updates) == 1 else 's', '' if args.quiet else ':')
-    # Alignment
-    max_1 = max([len(p[0]) for p in updates])
-    max_2 = max([len(p[1]) for p in updates])
-    max_3 = max([len(p[2]) for p in updates])
-    form = '  %%%ds : %%%ds => %%%ds' % (max_1, max_2, max_3)
-    if not args.quiet:
-      for pkg_tuple in updates:
-        print form % pkg_tuple
+  if args.include is not None:
+    include = args.include.split(',')
+    updates = [p for p in updates if p[0] in include]
+  if args.exclude is not None:
+    exclude = args.exclude.split(',')
+    updates = [p for p in updates if p[0] not in exclude]
 
-main()
+  # Print out the available updates.
+  if len(updates) == 0:
+    return
+  print '%d update%s available%s' % (len(updates), '' if len(updates) == 1 else 's', '' if args.quiet else ':')
+  # Alignment
+  max_1 = max([len(p[0]) for p in updates])
+  max_2 = max([len(p[1]) for p in updates])
+  max_3 = max([len(p[2]) for p in updates])
+  form = '  %%%ds : %%%ds => %%%ds' % (max_1, max_2, max_3)
+  if not args.quiet:
+    for pkg_tuple in updates:
+      print form % pkg_tuple
+
+if __name__ == "__main__":
+  main()

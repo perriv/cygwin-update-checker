@@ -11,8 +11,3 @@ Run `cuc.py` from your `.bashrc` to check for updating at most once a day whenev
       --cache-dir DIR  directory to store cached files (default: /var/cache/setup)
       --setup-dir DIR  directory in which setup stores its files (default:
                        /etc/setup)
-
-TODO:
-
-* --force-download option to bypass cache. Specifying an invalid cache-dir has the same effect.
-* --include-only and --exclude options for package whitelisting/blacklisting.
