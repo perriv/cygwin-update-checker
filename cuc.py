@@ -55,14 +55,14 @@ def parse_current_packages(ini):
 def main():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument('-v', dest='verbosity', action='count', default=0, help='increase logging output to stderr')
-  parser.add_argument('-q', dest='quiet', action='store_true', help='do not print package list to stdout')
-  parser.add_argument('--mirror', metavar='HOST', default='last mirror', help='cygwin mirror')
-  parser.add_argument('--cache-dir', metavar='DIR', default='/var/cache/setup', help='directory to store cached files')
-  parser.add_argument('--setup-dir', metavar='DIR', default='/etc/setup', help='directory in which setup stores its files')
-  parser.add_argument('--force-download', action='store_true', help='do not use cache')
+  parser.add_argument('-q', dest='quiet', action='store_true', help='refrain from printing package list to stdout')
+  parser.add_argument('-f', dest='force_download', action='store_true', help='download from mirror even if setup.ini is in cache')
+  parser.add_argument('--mirror', metavar='HOST', default='last mirror', help='cygwin mirror to download setup.ini from.')
   group = parser.add_mutually_exclusive_group()
   group.add_argument('--include', metavar='PKGS', help='comma-separated list of packages to only consider')
   group.add_argument('--exclude', metavar='PKGS', help='comma-separated list of packages to not consider')
+  parser.add_argument('--cache-dir', metavar='DIR', default='/var/cache/setup', help='directory to store cached files')
+  parser.add_argument('--setup-dir', metavar='DIR', default='/etc/setup', help='directory in which setup stores its files')
   args = parser.parse_args()
 
   # Logging configuration.
